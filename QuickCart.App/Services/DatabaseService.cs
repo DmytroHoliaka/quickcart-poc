@@ -3,21 +3,33 @@ using QuickCart.App.Stores;
 
 namespace QuickCart.App.Services
 {
-    public class DatabaseService
+    public class DatabaseService : IDisposable
     {
+        private readonly EventStore _eventStore;
+
         public DatabaseService(EventStore eventStore)
         {
+            _eventStore = eventStore;
+
             // Запис даних користувача в базу даних
-            eventStore.AccountCreated += CreateUserHandler;
+            _eventStore.AccountCreated += CreateUserHandler;
             
             // Запис даних товару в базу даних
-            eventStore.ProductAdded += CreateProductHandler;
+            _eventStore.ProductAdded += CreateProductHandler;
             
             // Запис оновлених даних товару в базу даних
-            eventStore.ProductUpdated += UpdateProductHandler;
+            _eventStore.ProductUpdated += UpdateProductHandler;
             
             // Видалення даних товару з бази даних
-            eventStore.ProductDeleted += DeleteProductHandler;
+            _eventStore.ProductDeleted += DeleteProductHandler;
+        }
+
+        public void Dispose()
+        {
+            _eventStore.AccountCreated -= CreateUserHandler;
+            _eventStore.ProductAdded -= CreateProductHandler;
+            _eventStore.ProductUpdated -= UpdateProductHandler;
+            _eventStore.ProductDeleted -= DeleteProductHandler;
         }
 
         public async Task CreateUserHandler(User userData)

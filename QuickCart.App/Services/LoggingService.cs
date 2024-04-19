@@ -3,24 +3,37 @@ using QuickCart.App.Stores;
 
 namespace QuickCart.App.Services
 {
-    public class LoggingService
+    public class LoggingService : IDisposable
     {
+        private readonly EventStore _eventStore;
+
         public LoggingService(EventStore eventStore)
         {
+            _eventStore = eventStore;
+
             // Логування створення нового облікового запису
-            eventStore.AccountCreated += LogAccountCreation;
+            _eventStore.AccountCreated += LogAccountCreation;
 
             // Логування авторизації користувача
-            eventStore.UserAuthorized += LogUserAuthorization;
+            _eventStore.UserAuthorized += LogUserAuthorization;
 
             // Логування додавання нового товару
-            eventStore.ProductAdded += LogProductAddition;
+            _eventStore.ProductAdded += LogProductAddition;
 
             // Логування оновлення товару
-            eventStore.ProductUpdated += LogProductUpdate;
+            _eventStore.ProductUpdated += LogProductUpdate;
 
             // Логування видалення товару
-            eventStore.ProductDeleted += LogProductDeletion;
+            _eventStore.ProductDeleted += LogProductDeletion;
+        }
+
+        public void Dispose()
+        {
+            _eventStore.AccountCreated -= LogAccountCreation;
+            _eventStore.UserAuthorized -= LogUserAuthorization;
+            _eventStore.ProductAdded -= LogProductAddition;
+            _eventStore.ProductUpdated -= LogProductUpdate;
+            _eventStore.ProductDeleted -= LogProductDeletion;
         }
 
         private async Task LogAccountCreation(User user)

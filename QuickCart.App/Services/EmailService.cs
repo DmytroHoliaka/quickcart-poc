@@ -3,24 +3,38 @@ using QuickCart.App.Stores;
 
 namespace QuickCart.App.Services
 {
-    public class EmailService
+    public class EmailService : IDisposable
     {
+        private readonly EventStore _eventStore;
+
         public EmailService(EventStore eventStore)
         {
+            _eventStore = eventStore;
+
             // Відправка листа з підтвердженням на електронну пошту
-            eventStore.AccountCreated += SendConfirmationEmailHandler;
+            _eventStore.AccountCreated += SendConfirmationEmailHandler;
 
             // Відправка повідомлення про вхід в систему на електронну пошту користувача
-            eventStore.UserAuthorized += SendLoginNotificationHandler;
+            _eventStore.UserAuthorized += SendLoginNotificationHandler;
 
             // Відправка повідомлення продавцю про успішне додавання товару
-            eventStore.ProductAdded += SendNotificationAddingProductHandler;
+            _eventStore.ProductAdded += SendNotificationAddingProductHandler;
 
             // Відправка повідомлення продавцю про успішне оновлення даних товару
-            eventStore.ProductUpdated += SendNotificationUpdatingProductHandler;
+            _eventStore.ProductUpdated += SendNotificationUpdatingProductHandler;
 
             // Відправка повідомлення продавцю про успішне видалення товару
-            eventStore.ProductDeleted += SendNotificationDeletingProductHandler;
+            _eventStore.ProductDeleted += SendNotificationDeletingProductHandler;
+        }
+        
+        public void Dispose()
+        {
+            _eventStore.AccountCreated -= SendConfirmationEmailHandler;
+            _eventStore.UserAuthorized -= SendLoginNotificationHandler;
+            _eventStore.ProductAdded -= SendNotificationAddingProductHandler;
+            _eventStore.ProductUpdated -= SendNotificationUpdatingProductHandler;
+            _eventStore.ProductDeleted -= SendNotificationDeletingProductHandler;
+
         }
 
         private async Task SendNotificationUpdatingProductHandler(Product product, User seller)
